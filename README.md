@@ -39,13 +39,13 @@ On form submission
 ## Screenshots
 
 ### Workflow
-![n8n workflow canvas](images/workflow-canvas.png)
+![n8n workflow canvas]
 
 ### Google Sheet output
-![Google Sheet results](images/google-sheet-output.png)
+![Google Sheet results]
 
 ### Negative review email alert
-![Gmail alert](images/gmail-alert.png)
+![Gmail alert]
 
 ## Tech stack
 
