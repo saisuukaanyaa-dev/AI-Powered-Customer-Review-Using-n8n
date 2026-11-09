@@ -1,0 +1,268 @@
+{
+  "name": "AI-Powered Customer Review Insights Pipeline",
+  "nodes": [
+    {
+      "parameters": {
+        "formTitle": "Product Review Form",
+        "formDescription": "Submit a customer review for analysis.",
+        "formFields": {
+          "values": [
+            {
+              "fieldLabel": "Product Name",
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "Product Review",
+              "fieldType": "textarea",
+              "requiredField": true
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "a1b2c3d4-0001-4000-8000-000000000001",
+      "name": "On form submission",
+      "type": "n8n-nodes-base.formTrigger",
+      "typeVersion": 2.2,
+      "position": [0, 300],
+      "webhookId": "5f3c1a7e-1111-4222-8333-444455556666"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=You are a customer feedback analyst. Summarize the following customer review of the product \"{{ $json['Product Name'] }}\" in 2-3 concise sentences. Capture the key themes and any actionable points for the product, marketing, and support teams.\n\nReturn ONLY the summary text. No preamble, no labels, no quotes.\n\nProduct Review:\n{{ $json['Product Review'] }}"
+      },
+      "id": "a1b2c3d4-0002-4000-8000-000000000002",
+      "name": "Summarization",
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.5,
+      "position": [260, 300]
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "gpt-4o-mini",
+          "mode": "id"
+        },
+        "options": {}
+      },
+      "id": "a1b2c3d4-0003-4000-8000-000000000003",
+      "name": "OpenAI Chat Model",
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [280, 520]
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Analyse the sentiment of the following customer review.\n\nClassify it as exactly one of: Positive, Negative, or Neutral.\nGive a confidence score as a number between 0 and 1.\n\nRespond in EXACTLY this format and nothing else:\nSentiment: <Positive/Negative/Neutral> | Score: <numeric value between 0 and 1>\n\nProduct Review:\n{{ $('On form submission').item.json['Product Review'] }}"
+      },
+      "id": "a1b2c3d4-0004-4000-8000-000000000004",
+      "name": "Sentiment Analysis",
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.5,
+      "position": [540, 300]
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "gpt-4o-mini",
+          "mode": "id"
+        },
+        "options": {}
+      },
+      "id": "a1b2c3d4-0005-4000-8000-000000000005",
+      "name": "OpenAI Chat Model1",
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [560, 520]
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Classify the tone of the following product review summary.\n\nChoose exactly one of: Informative, Persuasive, or Friendly.\nGive a confidence score as a number between 0 and 1.\n\nRespond in EXACTLY this format and nothing else:\nTone: <Informative/Persuasive/Friendly> | Score: <numeric value between 0 and 1>\n\nSummary:\n{{ $('Summarization').item.json.text }}"
+      },
+      "id": "a1b2c3d4-0006-4000-8000-000000000006",
+      "name": "Summary Tone Classification",
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.5,
+      "position": [820, 300]
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "gpt-4o-mini",
+          "mode": "id"
+        },
+        "options": {}
+      },
+      "id": "a1b2c3d4-0007-4000-8000-000000000007",
+      "name": "OpenAI Chat Model2",
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [840, 520]
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "PASTE_YOUR_GOOGLE_SHEET_ID_HERE",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "id"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Product Name": "={{ $('On form submission').item.json['Product Name'] }}",
+            "Product Review": "={{ $('On form submission').item.json['Product Review'] }}",
+            "Product Review Summary": "={{ $('Summarization').item.json.text }}",
+            "Sentiment and Score": "={{ $('Sentiment Analysis').item.json.text }}",
+            "Tone and Score": "={{ $('Summary Tone Classification').item.json.text }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "Product Name",
+              "displayName": "Product Name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Product Review",
+              "displayName": "Product Review",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Product Review Summary",
+              "displayName": "Product Review Summary",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Sentiment and Score",
+              "displayName": "Sentiment and Score",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Tone and Score",
+              "displayName": "Tone and Score",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "a1b2c3d4-0008-4000-8000-000000000008",
+      "name": "Append row in sheet",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [1100, 300]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": false,
+            "leftValue": "",
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "id": "c0ffee00-0001-4000-8000-000000000001",
+              "leftValue": "={{ $('Sentiment Analysis').item.json.text }}",
+              "rightValue": "Negative",
+              "operator": {
+                "type": "string",
+                "operation": "contains"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "a1b2c3d4-0009-4000-8000-000000000009",
+      "name": "Is Review Negative?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [1360, 300]
+    },
+    {
+      "parameters": {
+        "sendTo": "YOUR_EMAIL@gmail.com",
+        "subject": "=Negative Customer Review Received – {{ $('On form submission').item.json['Product Name'] }}",
+        "emailType": "text",
+        "message": "=Dear Team Lead,\nWe have received a negative customer review for the product - {{ $('On form submission').item.json['Product Name'] }}.\nPlease find the feedback summary below:\n{{ $('Summarization').item.json.text }}\n\nBest Regards,\nWorkflow Automation Team",
+        "options": {}
+      },
+      "id": "a1b2c3d4-0010-4000-8000-000000000010",
+      "name": "Send message to Team Lead",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [1620, 200]
+    }
+  ],
+  "connections": {
+    "On form submission": {
+      "main": [[{ "node": "Summarization", "type": "main", "index": 0 }]]
+    },
+    "Summarization": {
+      "main": [[{ "node": "Sentiment Analysis", "type": "main", "index": 0 }]]
+    },
+    "Sentiment Analysis": {
+      "main": [[{ "node": "Summary Tone Classification", "type": "main", "index": 0 }]]
+    },
+    "Summary Tone Classification": {
+      "main": [[{ "node": "Append row in sheet", "type": "main", "index": 0 }]]
+    },
+    "Append row in sheet": {
+      "main": [[{ "node": "Is Review Negative?", "type": "main", "index": 0 }]]
+    },
+    "Is Review Negative?": {
+      "main": [
+        [{ "node": "Send message to Team Lead", "type": "main", "index": 0 }],
+        []
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [[{ "node": "Summarization", "type": "ai_languageModel", "index": 0 }]]
+    },
+    "OpenAI Chat Model1": {
+      "ai_languageModel": [[{ "node": "Sentiment Analysis", "type": "ai_languageModel", "index": 0 }]]
+    },
+    "OpenAI Chat Model2": {
+      "ai_languageModel": [[{ "node": "Summary Tone Classification", "type": "ai_languageModel", "index": 0 }]]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "pinData": {}
+}
